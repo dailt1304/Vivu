@@ -1,0 +1,45 @@
+version: "3.8"
+
+services:
+  vivu-api:
+    build: .
+    container_name: vivu-api-service
+    ports:
+      - "5000:80"
+    environment:
+      - ASPNETCORE_ENVIRONMENT=Development
+      - ConnectionStrings__Redis=travel-redis:6379,password=ViVuApp_Redis_Pass1234
+    depends_on:
+      - redis
+    networks:
+      - travel-network
+  redis:
+    image: redis:7-alpine
+    container_name: travel-redis
+    ports:
+      - "6379:6379"
+    command: redis-server --appendonly yes --requirepass ViVuApp_Redis_Pass1234
+    volumes:
+      - redis_data:/data
+    networks:
+      - travel-network
+    restart: unless-stopped
+
+  redis-commander:
+    image: rediscommander/redis-commander:latest
+    container_name: travel-redis-commander
+    environment:
+      - REDIS_HOSTS=local:travel-redis:6379:0:ViVuApp_Redis_Pass1234
+    ports:
+      - "8081:8081"
+    networks:
+      - travel-network
+    depends_on:
+      - redis
+
+volumes:
+  redis_data:
+
+networks:
+  travel-network:
+    driver: bridge

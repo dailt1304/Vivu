@@ -1,0 +1,16 @@
+:root {
+    --color-primary: #3b82f6;
+    --color-secondary: #2563eb;
+    --color-bg-light: #ffffff;
+    --color-bg-dark: #111827;
+    --color-surface-dark: #1f2937;
+}
+
+.dark {
+    --color-bg-light: #111827;
+}
+
+.hero-pattern {
+    background-image: radial-gradient(#3b82f6 1px, transparent 1px);
+    background-size: 24px 24px;
+}

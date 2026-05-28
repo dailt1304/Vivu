@@ -1,0 +1,21 @@
+image: node:20-slim
+
+stages:
+  - deploy
+
+before_script:
+  - npm install -g vercel
+
+deploy_production:
+  stage: deploy
+  script:
+    - cd VivuAppFE
+    # Dùng lệnh này để kiểm tra xem ID có được nạp vào không (chỉ hiện 5 ký tự đầu)
+    - echo "Checking ID..." && echo $VERCEL_PROJECT_ID | cut -c 1-5
+    # Lệnh deploy chuẩn
+    - npm install
+    - vercel pull --yes --environment=production --token=$VERCEL_TOKEN --scope=$VERCEL_ORG_ID
+    - vercel build --prod --token=$VERCEL_TOKEN
+    - vercel deploy --prebuilt --prod --token=$VERCEL_TOKEN
+  rules:
+    - if: $CI_COMMIT_BRANCH == "master"

@@ -1,0 +1,39 @@
+image: mcr.microsoft.com/dotnet/sdk:8.0
+
+stages:
+  - build
+  - deploy
+
+variables:
+  AZURE_WEBAPP_NAME: "vivu-travel-platform"
+  AZURE_RESOURCE_GROUP: "vivu-travel-platform_group"
+  SOLUTION_PATH: "Vivu.sln"
+
+build_job:
+  stage: build
+  image: docker:24.0.5
+  services:
+    - docker:24.0.5-dind
+  script:
+    - docker build -t vivu-be-image .
+    - docker create --name extract vivu-be-image
+    - docker cp extract:/app ./publish
+    # Sửa lệnh cài đặt zip cho Alpine Linux
+    - apk add --no-cache zip
+    - cd publish && zip -r ../publish.zip . && cd ..
+  artifacts:
+    paths:
+      - publish.zip
+    expire_in: 1 hour
+
+deploy_job:
+  stage: deploy
+  image: mcr.microsoft.com/azure-cli
+  script:
+    - apt-get update && apt-get install -y jq
+    # Sử dụng JSON Credentials bạn đã tạo trong Azure Cloud Shell
+    - az login --service-principal -u $(echo $AZURE_CREDENTIALS | jq -r .clientId) -p $(echo $AZURE_CREDENTIALS | jq -r .clientSecret) --tenant $(echo $AZURE_CREDENTIALS | jq -r .tenantId)
+    # Deploy bản build sạch từ Docker lên Azure
+    - az webapp deployment source config-zip --name $AZURE_WEBAPP_NAME --resource-group $AZURE_RESOURCE_GROUP --src publish.zip
+  rules:
+    - if: $CI_COMMIT_BRANCH == "main"

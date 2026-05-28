@@ -1,0 +1,6 @@
+@Vivu.WebApi_HostAddress = http://localhost:5012
+
+GET {{Vivu.WebApi_HostAddress}}/weatherforecast/
+Accept: application/json
+
+###
